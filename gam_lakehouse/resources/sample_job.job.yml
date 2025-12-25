@@ -4,6 +4,13 @@ resources:
   jobs:
     sample_job:
       name: sample_job
+      # email_notifications:
+      #   on_start:
+      #     - your.username@databricks.com
+      #   on_success:
+      #     - your.username@databricks.com
+      #   on_failure:
+      #     - your.username@databricks.com
 
       trigger:
         # Run this job every day, exactly one day from the last run; see https://docs.databricks.com/api/workspace/jobs/create#trigger
@@ -25,6 +32,12 @@ resources:
         - task_key: refresh_pipeline
           pipeline_task:
             pipeline_id: ${resources.pipelines.gam_lakehouse_etl.id}
+        # - task_key: DQ_Check
+        #   depends_on:
+        #     - task_key: pipeline-task-dlt_pipeline_demo
+        #   notebook_task:
+        #     notebook_path: /Workspace/Users/your.username@databricks.com/DQ_Check
+        #     source: WORKSPACE
 
       environments:
         - environment_key: default
