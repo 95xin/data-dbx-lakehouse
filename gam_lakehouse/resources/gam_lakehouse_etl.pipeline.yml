@@ -1,0 +1,27 @@
+# The main pipeline for gam_lakehouse
+
+resources:
+  pipelines:
+    gam_lakehouse_etl:
+      name: gam_lakehouse_etl
+      catalog: ${var.bronze_catalog}
+      schema: ${var.schema}
+      serverless: true
+      root_path: "../src/gam_lakehouse_etl"
+
+      libraries:
+        - glob:
+            include: ../src/gam_lakehouse_etl/transformations/**
+        - glob:
+            include: ../src/gam_lakehouse_etl/data_sources/**
+
+      configuration:
+        bronze_catalog: ${var.bronze_catalog}
+        silver_catalog: ${var.silver_catalog}
+        gold_catalog: ${var.gold_catalog}
+        schema: ${var.schema}
+      environment:
+        dependencies: []
+          # We include every dependency defined by pyproject.toml by defining an editable environment
+          # that points to the folder where pyproject.toml is deployed.
+          # - --editable ${workspace.file_path}
