@@ -1,0 +1,32 @@
+name: Bundle PR Validate
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_ROOT: "gam_lakehouse"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@main
+
+      - name: Configure Databricks CLI profile (DEV)
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+        run: |
+          cat > ~/.databrickscfg <<EOF
+          [DEV_PROFILE]
+          host = $DATABRICKS_HOST
+          token = $DATABRICKS_TOKEN
+          EOF
+          chmod 600 ~/.databrickscfg
+
+      - name: Bundle validate (dev target)
+        run: |
+          cd "${BUNDLE_ROOT}"
+          databricks bundle validate -t dev --profile DEV_PROFILE
