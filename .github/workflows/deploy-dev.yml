@@ -1,0 +1,39 @@
+name: Bundle Deploy DEV
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy_dev:
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_ROOT: "gam_lakehouse"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@main
+
+      - name: Configure Databricks CLI profile (DEV)
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+        run: |
+          cat > ~/.databrickscfg <<EOF
+          [DEV_PROFILE]
+          host = $DATABRICKS_HOST
+          token = $DATABRICKS_TOKEN
+          EOF
+          chmod 600 ~/.databrickscfg
+
+      - name: Validate + Deploy (dev)
+        run: |
+          cd "${BUNDLE_ROOT}"
+          databricks bundle validate -t dev --profile DEV_PROFILE
+          databricks bundle deploy   -t dev --profile DEV_PROFILE
+
+      # 可选：部署后自动跑 DEV job（如果你想）
+      - name: Run DEV job
+        run: |
+          cd "${BUNDLE_ROOT}"
+          databricks bundle run -t dev --profile DEV_PROFILE sample_job
