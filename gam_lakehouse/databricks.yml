@@ -4,6 +4,11 @@ bundle:
   name: gam_lakehouse
   uuid: c2e84e41-0999-495a-baa6-38dc07e3e1f0
 
+# artifacts:
+#   python_artifact:
+#     type: whl
+#     build: python setup.py bdist_wheel
+
 include:
   - resources/*.yml
   - resources/*/*.yml
@@ -32,6 +37,7 @@ targets:
     default: true
     workspace:
       host: https://dbc-fa6d56c6-2a1a.cloud.databricks.com
+      root_path: /Workspace/Users/leoxin95@gmail.com/.bundle/${bundle.name}/${bundle.target}
     variables:
       # catalog: workspace
       # schema: ${workspace.current_user.short_name}
