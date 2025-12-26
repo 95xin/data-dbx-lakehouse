@@ -43,6 +43,16 @@ jobs:
           cd "$DATABRICKS_BUNDLE_ROOT"
           databricks bundle validate -t dev --profile DEV_PROFILE
 
+      - name: Debug repo structure
+        shell: bash
+        run: |
+          echo "PWD:"
+          pwd
+          echo "Top-level:"
+          ls -la
+          echo "Find databricks.yml:"
+          find . -maxdepth 6 -name databricks.yml -o -name databricks.yaml
+
       - name: Prepare bundle and check terraform exists
         shell: bash
         run: |
