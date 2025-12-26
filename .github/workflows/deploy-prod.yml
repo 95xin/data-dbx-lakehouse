@@ -1,20 +1,16 @@
 name: Bundle Deploy PROD
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ "main" ]
 
 jobs:
   deploy_prod:
     runs-on: ubuntu-latest
-    environment: production   # 你需要在 GitHub -> Settings -> Environments 建 production，并配置 required reviewers
-
+    environment: production
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # 跟 dev 一样：固定版本，别用 @main
-      - name: Setup Databricks CLI
-        uses: databricks/setup-cli@v0.246.0
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@v0.246.0
 
       - name: Configure Databricks CLI profile (PROD)
         env:
@@ -29,8 +25,7 @@ jobs:
           EOF
           chmod 600 ~/.databrickscfg
 
-      # 防止你之前遇到的 bundle root 污染
-      - name: Ensure no bundle-root env pollution
+      - name: Avoid bundle-root env pollution
         shell: bash
         run: |
           unset DATABRICKS_BUNDLE_ROOT || true
