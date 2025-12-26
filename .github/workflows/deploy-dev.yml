@@ -8,11 +8,11 @@ on:
 jobs:
   deploy_dev:
     runs-on: ubuntu-latest
-    env:
-      BUNDLE_ROOT: "gam_lakehouse"
     steps:
       - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@main
+
+      # ✅ 不要用 @main，改成稳定版本 tag
+      - uses: databricks/setup-cli@v0.246.0
 
       - name: Configure Databricks CLI profile (DEV)
         env:
@@ -25,39 +25,30 @@ jobs:
           token = $DATABRICKS_TOKEN
           EOF
           chmod 600 ~/.databrickscfg
+
       - name: Locate bundle root (databricks.yml)
         shell: bash
         run: |
-          echo "Searching for databricks.yml ..."
           BUNDLE_FILE=$(find . -name databricks.yml -o -name databricks.yaml | head -n 1)
-
           if [ -z "$BUNDLE_FILE" ]; then
-            echo "ERROR: databricks.yml not found in repo checkout."
-            echo "Tree (depth 4):"
+            echo "ERROR: databricks.yml not found."
             find . -maxdepth 4 -type d
             exit 1
           fi
-
           BUNDLE_ROOT=$(dirname "$BUNDLE_FILE")
-          echo "Found bundle file: $BUNDLE_FILE"
-          echo "Bundle root: $BUNDLE_ROOT"
-
-          # Databricks CLI uses this as the bundle root
           echo "DATABRICKS_BUNDLE_ROOT=$BUNDLE_ROOT" >> $GITHUB_ENV
+          echo "Found bundle root: $BUNDLE_ROOT"
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
+      - name: Clean bundle state
+        shell: bash
+        run: |
+          echo "Using bundle root: $DATABRICKS_BUNDLE_ROOT"
+          rm -rf "$DATABRICKS_BUNDLE_ROOT/.databricks" || true
 
-      - name: Validate + Deploy (dev)
+      - name: Validate (dev)
         run: |
           databricks bundle validate -t dev --profile DEV_PROFILE
-          databricks bundle deploy   -t dev --profile DEV_PROFILE
-      
 
-      # 可选：部署后自动跑 DEV job（如果你想）
-      # - name: Run DEV job
-      #   run: |
-      #     cd "${BUNDLE_ROOT}"
-      #     databricks bundle run -t dev --profile DEV_PROFILE sample_job
+      - name: Deploy (dev)
+        run: |
+          databricks bundle deploy -t dev --profile DEV_PROFILE
