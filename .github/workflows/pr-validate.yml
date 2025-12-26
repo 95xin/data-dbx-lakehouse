@@ -8,16 +8,19 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    env:
-      BUNDLE_ROOT: "gam_lakehouse"
     steps:
-      - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@main
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 不要用 @main，建议固定版本
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@v0.246.0
 
       - name: Configure Databricks CLI profile (DEV)
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+        shell: bash
         run: |
           cat > ~/.databrickscfg <<EOF
           [DEV_PROFILE]
@@ -26,7 +29,15 @@ jobs:
           EOF
           chmod 600 ~/.databrickscfg
 
-      - name: Bundle validate (dev target)
+      # 关键：清掉可能的 bundle root 污染变量
+      - name: Ensure no bundle-root env pollution
+        shell: bash
         run: |
-          cd "${BUNDLE_ROOT}"
+          unset DATABRICKS_BUNDLE_ROOT || true
+          unset BUNDLE_ROOT || true
+
+      - name: Bundle validate (dev target)
+        shell: bash
+        run: |
+          cd ./gam_lakehouse
           databricks bundle validate -t dev --profile DEV_PROFILE
