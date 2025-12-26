@@ -8,9 +8,12 @@ on:
 jobs:
   deploy_dev:
     runs-on: ubuntu-latest
+    env:
+      DATABRICKS_BUNDLE_ROOT: ./gam_lakehouse
     steps:
       - uses: actions/checkout@v4
 
+      # 建议固定版本，不用 @main（随便挑一个你们允许的稳定 tag）
       - uses: databricks/setup-cli@v0.246.0
 
       - name: Configure Databricks CLI profile (DEV)
@@ -25,57 +28,11 @@ jobs:
           EOF
           chmod 600 ~/.databrickscfg
 
-      - name: Locate bundle root (databricks.yml)
+      - name: Validate + Deploy (dev)
         shell: bash
         run: |
-          BUNDLE_FILE=$(find . -name databricks.yml -o -name databricks.yaml | head -n 1)
-          if [ -z "$BUNDLE_FILE" ]; then
-            echo "ERROR: databricks.yml not found."
-            find . -maxdepth 4 -type d
-            exit 1
-          fi
-          BUNDLE_ROOT=$(dirname "$BUNDLE_FILE")
-          echo "DATABRICKS_BUNDLE_ROOT=$BUNDLE_ROOT" >> $GITHUB_ENV
-          echo "Found bundle root: $BUNDLE_ROOT"
-
-      - name: Debug repo structure
-        shell: bash
-        run: |
-          echo "PWD:"
-          pwd
-          echo "Top-level:"
-          ls -la
-          echo "Find databricks.yml:"
-          find . -maxdepth 6 -name databricks.yml -o -name databricks.yaml
-
-      - name: Validate (dev)
-        run: |
+          echo "Using bundle root: $DATABRICKS_BUNDLE_ROOT"
+          ls -la "$DATABRICKS_BUNDLE_ROOT"
           cd "$DATABRICKS_BUNDLE_ROOT"
           databricks bundle validate -t dev --profile DEV_PROFILE
-
-    
-
-      - name: Prepare bundle and check terraform exists
-        shell: bash
-        run: |
-          cd "$DATABRICKS_BUNDLE_ROOT"
-          rm -rf .databricks || true
-
-          databricks bundle deploy -t dev --profile DEV_PROFILE --dry-run || true
-
-          echo "Searching terraform binary..."
-          find .databricks -maxdepth 6 -type f -name terraform -print || true
-
-          if [ ! -f ".databricks/bundle/dev/bin/terraform" ]; then
-            echo "ERROR: terraform binary not found at .databricks/bundle/dev/bin/terraform"
-            find .databricks -maxdepth 4 -type d -print
-            exit 1
-          fi
-
-          chmod +x .databricks/bundle/dev/bin/terraform || true
-
-      - name: Deploy (dev)
-        shell: bash
-        run: |
-          cd "$DATABRICKS_BUNDLE_ROOT"
-          databricks bundle deploy -t dev --profile DEV_PROFILE
+          databricks bundle deploy   -t dev --profile DEV_PROFILE
