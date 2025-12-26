@@ -11,7 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ✅ 不要用 @main，改成稳定版本 tag
       - uses: databricks/setup-cli@v0.246.0
 
       - name: Configure Databricks CLI profile (DEV)
@@ -39,16 +38,32 @@ jobs:
           echo "DATABRICKS_BUNDLE_ROOT=$BUNDLE_ROOT" >> $GITHUB_ENV
           echo "Found bundle root: $BUNDLE_ROOT"
 
-      - name: Clean bundle state
-        shell: bash
-        run: |
-          echo "Using bundle root: $DATABRICKS_BUNDLE_ROOT"
-          rm -rf "$DATABRICKS_BUNDLE_ROOT/.databricks" || true
-
       - name: Validate (dev)
         run: |
+          cd "$DATABRICKS_BUNDLE_ROOT"
           databricks bundle validate -t dev --profile DEV_PROFILE
 
-      - name: Deploy (dev)
+      - name: Prepare bundle and check terraform exists
+        shell: bash
         run: |
+          cd "$DATABRICKS_BUNDLE_ROOT"
+          rm -rf .databricks || true
+
+          databricks bundle deploy -t dev --profile DEV_PROFILE --dry-run || true
+
+          echo "Searching terraform binary..."
+          find .databricks -maxdepth 6 -type f -name terraform -print || true
+
+          if [ ! -f ".databricks/bundle/dev/bin/terraform" ]; then
+            echo "ERROR: terraform binary not found at .databricks/bundle/dev/bin/terraform"
+            find .databricks -maxdepth 4 -type d -print
+            exit 1
+          fi
+
+          chmod +x .databricks/bundle/dev/bin/terraform || true
+
+      - name: Deploy (dev)
+        shell: bash
+        run: |
+          cd "$DATABRICKS_BUNDLE_ROOT"
           databricks bundle deploy -t dev --profile DEV_PROFILE
