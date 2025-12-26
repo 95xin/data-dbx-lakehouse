@@ -7,7 +7,6 @@ on:
 jobs:
   deploy_prod:
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: databricks/setup-cli@v0.246.0
