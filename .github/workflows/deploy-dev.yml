@@ -38,11 +38,6 @@ jobs:
           echo "DATABRICKS_BUNDLE_ROOT=$BUNDLE_ROOT" >> $GITHUB_ENV
           echo "Found bundle root: $BUNDLE_ROOT"
 
-      - name: Validate (dev)
-        run: |
-          cd "$DATABRICKS_BUNDLE_ROOT"
-          databricks bundle validate -t dev --profile DEV_PROFILE
-
       - name: Debug repo structure
         shell: bash
         run: |
@@ -52,6 +47,13 @@ jobs:
           ls -la
           echo "Find databricks.yml:"
           find . -maxdepth 6 -name databricks.yml -o -name databricks.yaml
+
+      - name: Validate (dev)
+        run: |
+          cd "$DATABRICKS_BUNDLE_ROOT"
+          databricks bundle validate -t dev --profile DEV_PROFILE
+
+    
 
       - name: Prepare bundle and check terraform exists
         shell: bash
