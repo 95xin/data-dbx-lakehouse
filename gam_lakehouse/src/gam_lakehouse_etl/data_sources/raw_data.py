@@ -2,6 +2,8 @@ from pyspark import pipelines as dp
 bronze_catalog = spark.conf.get("bronze_catalog")
 schema = spark.conf.get("schema")
 target = f"{bronze_catalog}.{schema}.raw_data"
+# raw data table
+
 @dp.table(
     name=target,
     comment="Raw dataset loaded from Parquet in prod_bronze.gam volume"
