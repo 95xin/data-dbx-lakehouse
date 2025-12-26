@@ -6,17 +6,21 @@ on:
 jobs:
   deploy_prod:
     runs-on: ubuntu-latest
-    environment: production   # 需要你在 GitHub Environments 建一个 production 并配置 reviewers
-    env:
-      BUNDLE_ROOT: "gam_lakehouse"
+    environment: production   # 你需要在 GitHub -> Settings -> Environments 建 production，并配置 required reviewers
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@main
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 跟 dev 一样：固定版本，别用 @main
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@v0.246.0
 
       - name: Configure Databricks CLI profile (PROD)
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+        shell: bash
         run: |
           cat > ~/.databrickscfg <<EOF
           [PROD_PROFILE]
@@ -25,14 +29,16 @@ jobs:
           EOF
           chmod 600 ~/.databrickscfg
 
-      - name: Validate + Deploy (prod)
+      # 防止你之前遇到的 bundle root 污染
+      - name: Ensure no bundle-root env pollution
+        shell: bash
         run: |
-          cd "${BUNDLE_ROOT}"
+          unset DATABRICKS_BUNDLE_ROOT || true
+          unset BUNDLE_ROOT || true
+
+      - name: Validate + Deploy (prod)
+        shell: bash
+        run: |
+          cd ./gam_lakehouse
           databricks bundle validate -t prod --profile PROD_PROFILE
           databricks bundle deploy   -t prod --profile PROD_PROFILE
-
-      # 可选：部署后自动跑 PROD job（通常建议手动跑）
-      # - name: Run PROD job
-      #   run: |
-      #     cd "${BUNDLE_ROOT}"
-      #     databricks bundle run -t prod --profile PROD_PROFILE sample_job
