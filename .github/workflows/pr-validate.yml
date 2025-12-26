@@ -2,19 +2,14 @@ name: Bundle PR Validate
 
 on:
   pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ "preprod", "main" ]
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # 不要用 @main，建议固定版本
-      - name: Setup Databricks CLI
-        uses: databricks/setup-cli@v0.246.0
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@v0.246.0
 
       - name: Configure Databricks CLI profile (DEV)
         env:
@@ -29,15 +24,18 @@ jobs:
           EOF
           chmod 600 ~/.databrickscfg
 
-      # 关键：清掉可能的 bundle root 污染变量
-      - name: Ensure no bundle-root env pollution
+      - name: Avoid bundle-root env pollution
         shell: bash
         run: |
           unset DATABRICKS_BUNDLE_ROOT || true
           unset BUNDLE_ROOT || true
 
-      - name: Bundle validate (dev target)
+      - name: Bundle validate (target based on PR base branch)
         shell: bash
         run: |
           cd ./gam_lakehouse
-          databricks bundle validate -t dev --profile DEV_PROFILE
+          if [ "${{ github.base_ref }}" = "main" ]; then
+            databricks bundle validate -t prod --profile DEV_PROFILE
+          else
+            databricks bundle validate -t preprod --profile DEV_PROFILE
+          fi
