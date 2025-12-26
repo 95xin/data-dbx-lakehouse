@@ -3,11 +3,12 @@ from pyspark.sql.functions import col
 
 bronze_catalog = spark.conf.get("bronze_catalog")
 silver_catalog = spark.conf.get("silver_catalog")
-src = f"{bronze_catalog}.gam.bronze_data"
-sink = f"{silver_catalog}.gam.silver_data"
+schema = spark.conf.get("schema")
+src = f"{bronze_catalog}.{schema}.bronze_data"
+sink = f"{silver_catalog}.{schema}.silver_data"
 
 @dp.table(
-    name="dev_silver.gam.silver_data",
+    name=sink,
     comment="Cleaned and business logic applied silver table from bronze_data"
 )
 def silver_data():
