@@ -1,24 +1,24 @@
-name: Bundle Deploy PROD
+name: Bundle Deploy PREPROD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "preprod" ]
 
 jobs:
-  deploy_prod:
+  deploy_preprod:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: databricks/setup-cli@v0.246.0
 
-      - name: Configure Databricks CLI profile (PROD)
+      - name: Configure Databricks CLI profile (PREPROD)
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PREPROD }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PREPROD }}
         shell: bash
         run: |
           cat > ~/.databrickscfg <<EOF
-          [PROD_PROFILE]
+          [PREPROD_PROFILE]
           host = $DATABRICKS_HOST
           token = $DATABRICKS_TOKEN
           EOF
@@ -30,9 +30,9 @@ jobs:
           unset DATABRICKS_BUNDLE_ROOT || true
           unset BUNDLE_ROOT || true
 
-      - name: Validate + Deploy (prod)
+      - name: Validate + Deploy (preprod)
         shell: bash
         run: |
           cd ./gam_lakehouse
-          databricks bundle validate -t prod --profile PROD_PROFILE
-          databricks bundle deploy   -t prod --profile PROD_PROFILE
+          databricks bundle validate -t preprod --profile PREPROD_PROFILE
+          databricks bundle deploy   -t preprod --profile PREPROD_PROFILE
