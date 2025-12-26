@@ -45,6 +45,11 @@ jobs:
           # Databricks CLI uses this as the bundle root
           echo "DATABRICKS_BUNDLE_ROOT=$BUNDLE_ROOT" >> $GITHUB_ENV
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
       - name: Validate + Deploy (dev)
         run: |
           databricks bundle validate -t dev --profile DEV_PROFILE
