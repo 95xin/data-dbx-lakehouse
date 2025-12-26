@@ -30,7 +30,7 @@ jobs:
           unset DATABRICKS_BUNDLE_ROOT || true
           unset BUNDLE_ROOT || true
 
-      - name: Bundle validate (target based on PR base branch)
+      - name: Validate (target based on base branch)
         shell: bash
         run: |
           cd ./gam_lakehouse
