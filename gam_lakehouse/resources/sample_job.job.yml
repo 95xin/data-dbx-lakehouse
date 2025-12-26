@@ -39,7 +39,7 @@ resources:
         #     notebook_path: /Workspace/Users/your.username@databricks.com/DQ_Check
         #     source: WORKSPACE
 
-      environments:
-        - environment_key: default
-          spec:
-            environment_version: "2"
+      # environments:
+      #   - environment_key: default
+      #     spec:
+      #       environment_version: "2"
