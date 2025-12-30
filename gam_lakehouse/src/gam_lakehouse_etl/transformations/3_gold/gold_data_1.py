@@ -17,6 +17,6 @@ def silver_data():
     # Data cleaning: remove rows with nulls in critical columns
     # Business logic: filter out negative energy readings and ensure sensor values are within expected range
     df_filtered = df.filter(
-        (col("sensor_A").between(0, 1000))
+        (col("sensor_A").between(0, 1000))  #filter
     )
     return df_filtered
