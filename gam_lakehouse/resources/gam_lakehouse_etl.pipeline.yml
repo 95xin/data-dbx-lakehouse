@@ -3,7 +3,7 @@
 resources:
   pipelines:
     gam_lakehouse_etl:
-      name: gam_lakehouse_etl
+      name: gam_lakehouse_etl_${bundle.target}
       catalog: ${var.bronze_catalog}
       schema: ${var.schema}
       serverless: true

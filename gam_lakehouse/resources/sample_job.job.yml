@@ -3,7 +3,7 @@
 resources:
   jobs:
     sample_job:
-      name: sample_job
+      name: sample_job_${bundle.target}
       # email_notifications:
       #   on_start:
       #     - your.username@databricks.com
